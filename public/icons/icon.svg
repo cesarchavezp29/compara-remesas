@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a0e1a"/>
+      <stop offset="100%" style="stop-color:#1a1f35"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00ff88"/>
+      <stop offset="100%" style="stop-color:#00cc6a"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="512" height="512" rx="100" fill="url(#bg)"/>
+  
+  <!-- Dollar symbol circle -->
+  <circle cx="256" cy="220" r="120" fill="url(#accent)"/>
+  
+  <!-- Dollar sign -->
+  <text x="256" y="260" font-family="Arial, sans-serif" font-size="150" font-weight="bold" fill="#0a0e1a" text-anchor="middle">$</text>
+  
+  <!-- Arrow indicating sending -->
+  <path d="M180 380 L256 340 L332 380 L256 420 Z" fill="url(#accent)" opacity="0.8"/>
+  
+  <!-- Small flags representation -->
+  <circle cx="160" cy="440" r="25" fill="#00ff88"/>
+  <circle cx="256" cy="460" r="25" fill="#00cc6a"/>
+  <circle cx="352" cy="440" r="25" fill="#00ff88"/>
+</svg>

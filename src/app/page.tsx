@@ -10,6 +10,7 @@ import HistoryTab from '@/components/HistoryTab';
 import AlertsTab from '@/components/AlertsTab';
 import CashbackTab from '@/components/CashbackTab';
 import SettingsModal from '@/components/SettingsModal';
+import InstallBanner from '@/components/InstallBanner';
 
 export default function Home() {
   const { theme } = useTheme();
@@ -50,6 +51,8 @@ export default function Home() {
         isOpen={showSettings} 
         onClose={() => setShowSettings(false)} 
       />
+      
+      <InstallBanner />
     </div>
   );
 }

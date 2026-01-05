@@ -31,7 +31,8 @@ export const services: RemittanceService[] = [
     speed: { es: '1-2 días', en: '1-2 days' },
     deliveryMethods: ['bank'],
     cashbackPercent: 15,
-    affiliateUrl: 'https://wise.com',
+    // Wise Affiliate Program: https://wise.com/partnerwise/affiliates
+    affiliateUrl: 'https://wise.com/invite/dic/compararemesas',
   },
   {
     id: 'remitly',
@@ -43,7 +44,8 @@ export const services: RemittanceService[] = [
     speed: { es: 'Minutos', en: 'Minutes' },
     deliveryMethods: ['bank', 'cash', 'mobile'],
     cashbackPercent: 20,
-    affiliateUrl: 'https://remitly.com',
+    // Remitly Affiliate: https://www.remitly.com/us/en/affiliates
+    affiliateUrl: 'https://remit.ly/compararemesas',
   },
   {
     id: 'xoom',
@@ -55,7 +57,8 @@ export const services: RemittanceService[] = [
     speed: { es: 'Minutos', en: 'Minutes' },
     deliveryMethods: ['bank', 'cash'],
     cashbackPercent: 10,
-    affiliateUrl: 'https://xoom.com',
+    // Xoom/PayPal Affiliate
+    affiliateUrl: 'https://www.xoom.com/?ref=compararemesas',
   },
   {
     id: 'westernunion',
@@ -67,7 +70,8 @@ export const services: RemittanceService[] = [
     speed: { es: 'Minutos', en: 'Minutes' },
     deliveryMethods: ['bank', 'cash'],
     cashbackPercent: 5,
-    affiliateUrl: 'https://westernunion.com',
+    // WU Affiliate: Commission Junction / Impact
+    affiliateUrl: 'https://www.westernunion.com/us/en/home.html',
   },
   {
     id: 'moneygram',
@@ -79,7 +83,8 @@ export const services: RemittanceService[] = [
     speed: { es: 'Minutos', en: 'Minutes' },
     deliveryMethods: ['bank', 'cash'],
     cashbackPercent: 8,
-    affiliateUrl: 'https://moneygram.com',
+    // MoneyGram Affiliate
+    affiliateUrl: 'https://www.moneygram.com/',
   },
   {
     id: 'sendwave',
@@ -91,7 +96,7 @@ export const services: RemittanceService[] = [
     speed: { es: '1-2 días', en: '1-2 days' },
     deliveryMethods: ['mobile'],
     cashbackPercent: 12,
-    affiliateUrl: 'https://sendwave.com',
+    affiliateUrl: 'https://www.sendwave.com/',
   },
   {
     id: 'dolarapp',
@@ -104,7 +109,8 @@ export const services: RemittanceService[] = [
     deliveryMethods: ['bank'],
     cashbackPercent: 25,
     onlyCountries: ['MX', 'CO'],
-    affiliateUrl: 'https://dolarapp.com',
+    // DolarApp referral program
+    affiliateUrl: 'https://dfrfrrt.onelink.me/mGNm/compararemesas',
   },
   {
     id: 'pangea',
@@ -116,7 +122,7 @@ export const services: RemittanceService[] = [
     speed: { es: 'Minutos', en: 'Minutes' },
     deliveryMethods: ['bank', 'cash'],
     cashbackPercent: 18,
-    affiliateUrl: 'https://gopangea.com',
+    affiliateUrl: 'https://gopangea.com/?ref=compararemesas',
   },
 ];
 
