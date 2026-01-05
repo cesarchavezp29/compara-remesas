@@ -4,21 +4,34 @@ import React, { useState, useMemo } from 'react';
 import { useTheme, useTranslation } from '@/lib/context';
 import { countries, services } from '@/lib/data';
 import { compareServices, formatCurrency, calculateSavings } from '@/lib/calculations';
+import { useExchangeRates } from '@/hooks/useExchangeRates';
 import { Country } from '@/types';
+import { RefreshCw } from 'lucide-react';
 
 export default function CompareTab() {
   const { theme } = useTheme();
   const { t, language } = useTranslation();
+  const { rates, loading, lastUpdated } = useExchangeRates();
   
   const [amount, setAmount] = useState(500);
   const [selectedCountry, setSelectedCountry] = useState<Country>(countries[0]);
   const [inverseMode, setInverseMode] = useState(false);
   
   const results = useMemo(() => {
-    return compareServices(amount, selectedCountry, services, inverseMode);
-  }, [amount, selectedCountry, inverseMode]);
+    return compareServices(amount, selectedCountry, services, inverseMode, rates);
+  }, [amount, selectedCountry, inverseMode, rates]);
   
   const savings = useMemo(() => calculateSavings(results), [results]);
+
+  // Format last updated time
+  const formatLastUpdated = () => {
+    if (!lastUpdated) return '';
+    const date = new Date(lastUpdated);
+    return date.toLocaleTimeString(language === 'es' ? 'es-ES' : 'en-US', { 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    });
+  };
 
   return (
     <div className="animate-fade-in">
@@ -30,18 +43,35 @@ export default function CompareTab() {
           border: `1px solid ${theme.surfaceBorder}` 
         }}
       >
-        <div className="text-xs mb-3" style={{ color: theme.textMuted }}>
-          {t('quickConvert')} - {t('todayRate')}
+        <div className="flex justify-between items-center mb-3">
+          <div className="text-xs" style={{ color: theme.textMuted }}>
+            {t('quickConvert')} - {t('todayRate')}
+          </div>
+          <div className="flex items-center gap-2">
+            {loading && (
+              <RefreshCw size={12} className="animate-spin" style={{ color: theme.primary }} />
+            )}
+            {lastUpdated && (
+              <span className="text-[10px]" style={{ color: theme.textMuted }}>
+                {formatLastUpdated()}
+              </span>
+            )}
+          </div>
         </div>
         <div className="flex justify-between items-center">
           {[
-            { flag: '🇲🇽', rate: '17.15', currency: 'MXN' },
-            { flag: '🇨🇴', rate: '4,150', currency: 'COP' },
-            { flag: '🇵🇪', rate: '3.72', currency: 'PEN' },
+            { flag: '🇲🇽', currency: 'MXN' },
+            { flag: '🇨🇴', currency: 'COP' },
+            { flag: '🇵🇪', currency: 'PEN' },
           ].map((item, i) => (
             <div key={i} className="text-center">
               <div className="text-xl mb-1">{item.flag}</div>
-              <div className="text-sm font-bold" style={{ color: theme.text }}>{item.rate}</div>
+              <div className="text-sm font-bold" style={{ color: theme.text }}>
+                {item.currency === 'COP' 
+                  ? rates[item.currency]?.toLocaleString() 
+                  : rates[item.currency]?.toFixed(2)
+                }
+              </div>
               <div className="text-xs" style={{ color: theme.textMuted }}>{item.currency}</div>
             </div>
           ))}

@@ -1,21 +1,59 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useApp, useTheme, useTranslation } from '@/lib/context';
+import { useTheme, useTranslation } from '@/lib/context';
 import { themes, ThemeId } from '@/lib/themes';
-import { X, ChevronLeft } from 'lucide-react';
+import { 
+  X, ChevronLeft, ChevronRight, Bell, Shield, User, Wrench, 
+  HelpCircle, Star, Share2, FileText, Mail, Calculator,
+  Calendar, TrendingUp, AlertTriangle, BookOpen
+} from 'lucide-react';
 
 interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-type SettingsTab = 'main' | 'appearance' | 'feedback';
+type SettingsTab = 'main' | 'appearance' | 'notifications' | 'security' | 'profile' | 'tools' | 'feedback' | 'support';
+
+// Mock user data
+const userData = {
+  name: 'Carlos García',
+  email: 'carlos@email.com',
+  avatar: 'CG',
+  memberSince: 'Enero 2025',
+  totalSent: 8450,
+  totalSaved: 127,
+  level: 'silver',
+  achievements: [
+    { id: 1, icon: '🚀', name: { es: 'Primera transferencia', en: 'First transfer' }, unlocked: true },
+    { id: 2, icon: '💯', name: { es: '$1,000 enviados', en: '$1,000 sent' }, unlocked: true },
+    { id: 3, icon: '🏆', name: { es: '$5,000 enviados', en: '$5,000 sent' }, unlocked: true },
+    { id: 4, icon: '👨‍👩‍👧', name: { es: 'Grupo familiar', en: 'Family group' }, unlocked: true },
+    { id: 5, icon: '💎', name: { es: '$10,000 enviados', en: '$10,000 sent' }, unlocked: false },
+    { id: 6, icon: '🌟', name: { es: 'Super ahorrador', en: 'Super saver' }, unlocked: false },
+  ],
+};
 
 export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const { theme, themeId, setThemeId } = useTheme();
   const { t, language, setLanguage } = useTranslation();
   const [activeTab, setActiveTab] = useState<SettingsTab>('main');
+  
+  // Notifications state
+  const [notifications, setNotifications] = useState({
+    rateAlerts: true,
+    reminders: true,
+    promos: false,
+  });
+  
+  // Security state
+  const [security, setSecurity] = useState({
+    faceId: false,
+    pin: false,
+  });
+  
+  // Feedback state
   const [feedbackData, setFeedbackData] = useState({ category: 'general', rating: 5, message: '' });
   const [feedbackSent, setFeedbackSent] = useState(false);
 
@@ -27,6 +65,27 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     onClose();
   };
 
+  const menuItems = [
+    { id: 'appearance', icon: '🎨', label: t('appearance'), desc: `${t('theme')} & ${t('language')}` },
+    { id: 'notifications', icon: '🔔', label: t('notifications'), desc: t('notificationsDesc') },
+    { id: 'security', icon: '🔒', label: t('security'), desc: t('securityDesc') },
+    { id: 'profile', icon: '👤', label: t('profile'), desc: `${t('userLevel')} & ${t('achievements')}` },
+    { id: 'tools', icon: '🛠️', label: t('tools'), desc: language === 'es' ? 'Calculadoras y más' : 'Calculators and more' },
+    { id: 'feedback', icon: '💬', label: t('feedback'), desc: t('feedbackDesc') },
+    { id: 'support', icon: '❓', label: t('support'), desc: language === 'es' ? 'Ayuda y contacto' : 'Help and contact' },
+  ];
+
+  const getLevelInfo = () => {
+    const levels = {
+      bronze: { name: t('levelBronze'), color: '#CD7F32', next: 1000 },
+      silver: { name: t('levelSilver'), color: '#C0C0C0', next: 5000 },
+      gold: { name: t('levelGold'), color: '#FFD700', next: 10000 },
+      platinum: { name: t('levelPlatinum'), color: '#E5E4E2', next: null },
+    };
+    return levels[userData.level as keyof typeof levels];
+  };
+
+  // Render functions for each tab
   const renderMainMenu = () => (
     <>
       <h3 className="text-lg font-bold mb-5" style={{ color: theme.text }}>
@@ -34,10 +93,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       </h3>
 
       <div className="space-y-2">
-        {[
-          { id: 'appearance', icon: '🎨', label: t('appearance'), desc: `${t('theme')} & ${t('language')}` },
-          { id: 'feedback', icon: '💬', label: t('feedback'), desc: t('feedbackDesc') },
-        ].map((item) => (
+        {menuItems.map((item) => (
           <button
             key={item.id}
             onClick={() => setActiveTab(item.id as SettingsTab)}
@@ -53,7 +109,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               <div className="font-semibold text-sm">{item.label}</div>
               <div className="text-xs" style={{ color: theme.textMuted }}>{item.desc}</div>
             </div>
-            <span style={{ color: theme.textMuted }}>›</span>
+            <ChevronRight size={16} style={{ color: theme.textMuted }} />
           </button>
         ))}
       </div>
@@ -98,7 +154,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 color: theme.text,
               }}
             >
-              <span>{lang.flag}</span> {lang.label}
+              <span className="text-xl">{lang.flag}</span> {lang.label}
             </button>
           ))}
         </div>
@@ -109,21 +165,352 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         {t('theme')}
       </div>
       <div className="grid grid-cols-2 gap-3">
-        {Object.values(themes).map((t) => (
+        {Object.values(themes).map((themeOption) => (
           <button
-            key={t.id}
-            onClick={() => setThemeId(t.id as ThemeId)}
+            key={themeOption.id}
+            onClick={() => setThemeId(themeOption.id as ThemeId)}
             className="p-4 rounded-xl font-semibold text-sm flex items-center gap-2 transition-all"
             style={{
-              background: themeId === t.id ? theme.cardHighlight : theme.surface,
-              border: `2px solid ${themeId === t.id ? theme.primary : theme.surfaceBorder}`,
+              background: themeId === themeOption.id ? theme.cardHighlight : theme.surface,
+              border: `2px solid ${themeId === themeOption.id ? theme.primary : theme.surfaceBorder}`,
               color: theme.text,
             }}
           >
-            <span className="text-xl">{t.icon}</span>
-            <span>{t.name[language]}</span>
+            <span className="text-xl">{themeOption.icon}</span>
+            <span>{themeOption.name[language]}</span>
           </button>
         ))}
+      </div>
+    </>
+  );
+
+  const renderNotifications = () => (
+    <>
+      <button 
+        onClick={() => setActiveTab('main')}
+        className="flex items-center gap-1 mb-4 text-sm"
+        style={{ color: theme.primary }}
+      >
+        <ChevronLeft size={16} /> {t('settings')}
+      </button>
+      
+      <h3 className="text-lg font-bold mb-5" style={{ color: theme.text }}>
+        🔔 {t('notifications')}
+      </h3>
+
+      <div className="space-y-3">
+        {[
+          { 
+            id: 'rateAlerts', 
+            icon: <TrendingUp size={18} />,
+            title: language === 'es' ? 'Alertas de tipo de cambio' : 'Exchange rate alerts',
+            desc: language === 'es' ? 'Notificarte cuando la tasa te convenga' : 'Notify when rate is favorable',
+          },
+          { 
+            id: 'reminders', 
+            icon: <Calendar size={18} />,
+            title: language === 'es' ? 'Recordatorios de envío' : 'Transfer reminders',
+            desc: language === 'es' ? 'Recordar envíos programados' : 'Remind scheduled transfers',
+          },
+          { 
+            id: 'promos', 
+            icon: <Star size={18} />,
+            title: language === 'es' ? 'Ofertas promocionales' : 'Promotional offers',
+            desc: language === 'es' ? 'Descuentos y promociones' : 'Discounts and promotions',
+          },
+        ].map((item) => (
+          <div 
+            key={item.id}
+            className="flex items-center justify-between p-4 rounded-xl"
+            style={{
+              background: theme.surface,
+              border: `1px solid ${theme.surfaceBorder}`,
+            }}
+          >
+            <div className="flex items-center gap-3">
+              <div style={{ color: theme.primary }}>{item.icon}</div>
+              <div>
+                <div className="font-semibold text-sm" style={{ color: theme.text }}>{item.title}</div>
+                <div className="text-xs" style={{ color: theme.textMuted }}>{item.desc}</div>
+              </div>
+            </div>
+            <button
+              onClick={() => setNotifications({ ...notifications, [item.id]: !notifications[item.id as keyof typeof notifications] })}
+              className="w-12 h-7 rounded-full relative transition-all"
+              style={{
+                background: notifications[item.id as keyof typeof notifications] ? theme.primary : theme.inputBorder,
+              }}
+            >
+              <div 
+                className="w-5 h-5 rounded-full bg-white absolute top-1 transition-all"
+                style={{ left: notifications[item.id as keyof typeof notifications] ? '26px' : '4px' }}
+              />
+            </button>
+          </div>
+        ))}
+      </div>
+    </>
+  );
+
+  const renderSecurity = () => (
+    <>
+      <button 
+        onClick={() => setActiveTab('main')}
+        className="flex items-center gap-1 mb-4 text-sm"
+        style={{ color: theme.primary }}
+      >
+        <ChevronLeft size={16} /> {t('settings')}
+      </button>
+      
+      <h3 className="text-lg font-bold mb-5" style={{ color: theme.text }}>
+        🔒 {t('security')}
+      </h3>
+
+      <div className="space-y-3">
+        {[
+          { 
+            id: 'faceId', 
+            icon: '👤',
+            title: 'Face ID / Touch ID',
+            desc: language === 'es' ? 'Desbloquear con biometría' : 'Unlock with biometrics',
+          },
+          { 
+            id: 'pin', 
+            icon: '🔢',
+            title: language === 'es' ? 'Código PIN' : 'PIN Code',
+            desc: language === 'es' ? 'Proteger con 4 dígitos' : 'Protect with 4 digits',
+          },
+        ].map((item) => (
+          <div 
+            key={item.id}
+            className="flex items-center justify-between p-4 rounded-xl"
+            style={{
+              background: theme.surface,
+              border: `1px solid ${theme.surfaceBorder}`,
+            }}
+          >
+            <div className="flex items-center gap-3">
+              <span className="text-xl">{item.icon}</span>
+              <div>
+                <div className="font-semibold text-sm" style={{ color: theme.text }}>{item.title}</div>
+                <div className="text-xs" style={{ color: theme.textMuted }}>{item.desc}</div>
+              </div>
+            </div>
+            <button
+              onClick={() => setSecurity({ ...security, [item.id]: !security[item.id as keyof typeof security] })}
+              className="w-12 h-7 rounded-full relative transition-all"
+              style={{
+                background: security[item.id as keyof typeof security] ? theme.primary : theme.inputBorder,
+              }}
+            >
+              <div 
+                className="w-5 h-5 rounded-full bg-white absolute top-1 transition-all"
+                style={{ left: security[item.id as keyof typeof security] ? '26px' : '4px' }}
+              />
+            </button>
+          </div>
+        ))}
+      </div>
+
+      <div 
+        className="mt-4 p-4 rounded-xl"
+        style={{
+          background: `${theme.warning}15`,
+          border: `1px solid ${theme.warning}30`,
+        }}
+      >
+        <div className="flex items-start gap-3">
+          <AlertTriangle size={18} style={{ color: theme.warning }} />
+          <div className="text-xs" style={{ color: theme.textSecondary }}>
+            {language === 'es' 
+              ? 'La seguridad biométrica requiere que tu dispositivo tenga Face ID o Touch ID configurado.'
+              : 'Biometric security requires your device to have Face ID or Touch ID set up.'
+            }
+          </div>
+        </div>
+      </div>
+    </>
+  );
+
+  const renderProfile = () => {
+    const levelInfo = getLevelInfo();
+    const progress = (userData.totalSent / (levelInfo.next || userData.totalSent)) * 100;
+
+    return (
+      <>
+        <button 
+          onClick={() => setActiveTab('main')}
+          className="flex items-center gap-1 mb-4 text-sm"
+          style={{ color: theme.primary }}
+        >
+          <ChevronLeft size={16} /> {t('settings')}
+        </button>
+        
+        <h3 className="text-lg font-bold mb-5" style={{ color: theme.text }}>
+          👤 {t('profile')}
+        </h3>
+
+        {/* User Card */}
+        <div 
+          className="rounded-xl p-4 mb-4"
+          style={{
+            background: theme.secondaryGradient,
+          }}
+        >
+          <div className="flex items-center gap-4">
+            <div 
+              className="w-14 h-14 rounded-full flex items-center justify-center text-lg font-bold text-white"
+              style={{ background: 'rgba(255,255,255,0.2)' }}
+            >
+              {userData.avatar}
+            </div>
+            <div className="text-white">
+              <div className="font-bold">{userData.name}</div>
+              <div className="text-xs opacity-80">{t('memberSince')} {userData.memberSince}</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          <div 
+            className="rounded-xl p-3 text-center"
+            style={{ background: theme.surface, border: `1px solid ${theme.surfaceBorder}` }}
+          >
+            <div className="text-lg font-bold" style={{ color: theme.primary }}>
+              ${userData.totalSent.toLocaleString()}
+            </div>
+            <div className="text-xs" style={{ color: theme.textMuted }}>{t('totalSent')}</div>
+          </div>
+          <div 
+            className="rounded-xl p-3 text-center"
+            style={{ background: theme.surface, border: `1px solid ${theme.surfaceBorder}` }}
+          >
+            <div className="text-lg font-bold" style={{ color: theme.success }}>
+              ${userData.totalSaved}
+            </div>
+            <div className="text-xs" style={{ color: theme.textMuted }}>{t('totalSaved')}</div>
+          </div>
+        </div>
+
+        {/* Level */}
+        <div 
+          className="rounded-xl p-4 mb-4"
+          style={{ background: theme.surface, border: `1px solid ${theme.surfaceBorder}` }}
+        >
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <span className="text-lg">🏅</span>
+              <span className="font-semibold text-sm" style={{ color: theme.text }}>
+                {t('userLevel')}: {levelInfo.name}
+              </span>
+            </div>
+            <div 
+              className="px-2 py-1 rounded-full text-xs font-bold"
+              style={{ background: levelInfo.color, color: '#000' }}
+            >
+              {levelInfo.name.toUpperCase()}
+            </div>
+          </div>
+          {levelInfo.next && (
+            <>
+              <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                <div 
+                  className="h-full rounded-full transition-all"
+                  style={{ width: `${Math.min(progress, 100)}%`, background: levelInfo.color }}
+                />
+              </div>
+              <div className="text-xs mt-2" style={{ color: theme.textMuted }}>
+                ${userData.totalSent.toLocaleString()} / ${levelInfo.next.toLocaleString()} {language === 'es' ? 'para siguiente nivel' : 'to next level'}
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Achievements */}
+        <div className="text-xs uppercase tracking-wider mb-3" style={{ color: theme.textMuted }}>
+          {t('achievements')}
+        </div>
+        <div className="grid grid-cols-3 gap-2">
+          {userData.achievements.map((achievement) => (
+            <div 
+              key={achievement.id}
+              className="rounded-xl p-3 text-center"
+              style={{ 
+                background: theme.surface, 
+                border: `1px solid ${theme.surfaceBorder}`,
+                opacity: achievement.unlocked ? 1 : 0.4,
+              }}
+            >
+              <div className="text-2xl mb-1">{achievement.icon}</div>
+              <div className="text-[9px]" style={{ color: theme.textMuted }}>
+                {achievement.name[language]}
+              </div>
+              {achievement.unlocked && (
+                <div className="text-[8px] mt-1" style={{ color: theme.success }}>✓</div>
+              )}
+            </div>
+          ))}
+        </div>
+      </>
+    );
+  };
+
+  const renderTools = () => (
+    <>
+      <button 
+        onClick={() => setActiveTab('main')}
+        className="flex items-center gap-1 mb-4 text-sm"
+        style={{ color: theme.primary }}
+      >
+        <ChevronLeft size={16} /> {t('settings')}
+      </button>
+      
+      <h3 className="text-lg font-bold mb-5" style={{ color: theme.text }}>
+        🛠️ {t('tools')}
+      </h3>
+
+      <div className="space-y-2">
+        {[
+          { icon: '🧮', label: t('tipCalculator'), desc: language === 'es' ? 'Calcular propinas' : 'Calculate tips' },
+          { icon: '📅', label: t('bankHolidays'), desc: language === 'es' ? 'Días festivos bancarios' : 'Bank holidays' },
+          { icon: '📈', label: t('rateHistory'), desc: language === 'es' ? 'Gráficos históricos' : 'Historical charts' },
+          { icon: '🛡️', label: t('scamChecker'), desc: language === 'es' ? 'Verificar estafas' : 'Check for scams' },
+          { icon: '📖', label: t('glossary'), desc: language === 'es' ? 'Términos de remesas' : 'Remittance terms' },
+        ].map((tool, i) => (
+          <button
+            key={i}
+            className="w-full flex items-center gap-3 p-4 rounded-xl text-left transition-all hover:opacity-80"
+            style={{
+              background: theme.surface,
+              border: `1px solid ${theme.surfaceBorder}`,
+              color: theme.text,
+            }}
+          >
+            <span className="text-xl">{tool.icon}</span>
+            <div className="flex-1">
+              <div className="font-semibold text-sm">{tool.label}</div>
+              <div className="text-xs" style={{ color: theme.textMuted }}>{tool.desc}</div>
+            </div>
+            <ChevronRight size={16} style={{ color: theme.textMuted }} />
+          </button>
+        ))}
+      </div>
+
+      <div 
+        className="mt-4 p-4 rounded-xl text-center"
+        style={{
+          background: theme.cardHighlight,
+          border: `1px solid ${theme.primary}30`,
+        }}
+      >
+        <div className="text-2xl mb-2">🚧</div>
+        <div className="text-xs" style={{ color: theme.textSecondary }}>
+          {language === 'es' 
+            ? 'Estas herramientas estarán disponibles pronto'
+            : 'These tools will be available soon'
+          }
+        </div>
       </div>
     </>
   );
@@ -232,6 +619,86 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     </>
   );
 
+  const renderSupport = () => (
+    <>
+      <button 
+        onClick={() => setActiveTab('main')}
+        className="flex items-center gap-1 mb-4 text-sm"
+        style={{ color: theme.primary }}
+      >
+        <ChevronLeft size={16} /> {t('settings')}
+      </button>
+      
+      <h3 className="text-lg font-bold mb-5" style={{ color: theme.text }}>
+        ❓ {t('support')}
+      </h3>
+
+      <div className="space-y-2">
+        {[
+          { icon: <HelpCircle size={18} />, label: t('helpCenter'), action: 'help' },
+          { icon: <Mail size={18} />, label: t('contactUs'), action: 'contact' },
+          { icon: <Star size={18} />, label: t('rateApp'), action: 'rate' },
+          { icon: <Share2 size={18} />, label: t('shareApp'), action: 'share' },
+        ].map((item, i) => (
+          <button
+            key={i}
+            className="w-full flex items-center gap-3 p-4 rounded-xl text-left transition-all hover:opacity-80"
+            style={{
+              background: theme.surface,
+              border: `1px solid ${theme.surfaceBorder}`,
+              color: theme.text,
+            }}
+          >
+            <div style={{ color: theme.primary }}>{item.icon}</div>
+            <div className="flex-1 font-semibold text-sm">{item.label}</div>
+            <ChevronRight size={16} style={{ color: theme.textMuted }} />
+          </button>
+        ))}
+      </div>
+
+      <div className="mt-6 pt-4" style={{ borderTop: `1px solid ${theme.surfaceBorder}` }}>
+        <div className="space-y-2">
+          {[
+            { label: t('privacyPolicy'), icon: <FileText size={16} /> },
+            { label: t('termsOfService'), icon: <FileText size={16} /> },
+          ].map((item, i) => (
+            <button
+              key={i}
+              className="w-full flex items-center gap-3 p-3 rounded-xl text-left text-sm transition-all hover:opacity-80"
+              style={{ color: theme.textMuted }}
+            >
+              {item.icon}
+              <span>{item.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="text-center mt-6">
+        <div className="text-xs" style={{ color: theme.textMuted }}>
+          {t('version')} 1.0.0
+        </div>
+        <div className="text-[10px] mt-1" style={{ color: theme.textMuted }}>
+          Made with ❤️ for LATAM families
+        </div>
+      </div>
+    </>
+  );
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'main': return renderMainMenu();
+      case 'appearance': return renderAppearance();
+      case 'notifications': return renderNotifications();
+      case 'security': return renderSecurity();
+      case 'profile': return renderProfile();
+      case 'tools': return renderTools();
+      case 'feedback': return renderFeedback();
+      case 'support': return renderSupport();
+      default: return renderMainMenu();
+    }
+  };
+
   return (
     <div 
       className="fixed inset-0 z-[200] flex items-end justify-center"
@@ -260,9 +727,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           <X size={20} />
         </button>
 
-        {activeTab === 'main' && renderMainMenu()}
-        {activeTab === 'appearance' && renderAppearance()}
-        {activeTab === 'feedback' && renderFeedback()}
+        {renderContent()}
       </div>
     </div>
   );
