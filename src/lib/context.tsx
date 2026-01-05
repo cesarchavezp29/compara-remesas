@@ -3,6 +3,8 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { themes, ThemeColors, ThemeId } from '@/lib/themes';
 import { translations, Language, TranslationKey } from '@/lib/translations';
+import { supabase } from '@/lib/supabase';
+import { User } from '@supabase/supabase-js';
 
 interface AppContextType {
   // Theme
@@ -15,9 +17,11 @@ interface AppContextType {
   setLanguage: (lang: Language) => void;
   t: (key: TranslationKey) => string;
   
-  // User preferences
-  isAuthenticated: boolean;
-  setIsAuthenticated: (auth: boolean) => void;
+  // Auth
+  user: User | null;
+  setUser: (user: User | null) => void;
+  loading: boolean;
+  signOut: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -25,7 +29,8 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export function AppProvider({ children }: { children: ReactNode }) {
   const [themeId, setThemeId] = useState<ThemeId>('dark');
   const [language, setLanguage] = useState<Language>('es');
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
   
   // Load preferences from localStorage on mount
   useEffect(() => {
@@ -41,6 +46,32 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
     }
   }, []);
+
+  // Check for existing session
+  useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        setUser(session?.user ?? null);
+      } catch (error) {
+        console.error('Error checking session:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkSession();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        setUser(session?.user ?? null);
+        setLoading(false);
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  }, []);
   
   // Save preferences to localStorage when they change
   useEffect(() => {
@@ -54,6 +85,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const t = (key: TranslationKey): string => {
     return translations[language][key] || key;
   };
+
+  // Sign out function
+  const signOut = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+  };
   
   const value: AppContextType = {
     theme: themes[themeId],
@@ -62,8 +99,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     language,
     setLanguage,
     t,
-    isAuthenticated,
-    setIsAuthenticated,
+    user,
+    setUser,
+    loading,
+    signOut,
   };
   
   return (
@@ -95,4 +134,9 @@ export function useLanguage() {
 export function useTranslation() {
   const { t, language, setLanguage } = useApp();
   return { t, language, setLanguage };
+}
+
+export function useAuth() {
+  const { user, setUser, loading, signOut } = useApp();
+  return { user, setUser, loading, signOut };
 }
